@@ -50,27 +50,7 @@
   }
 
   header{
-    margin-bottom: 40px;
-  }
-
-  .mark{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 13px;
-    color: var(--text-faint);
-    letter-spacing: 0.02em;
-    margin-bottom: 28px;
-  }
-
-  .mark .dot{
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent);
-    transition: background 0.35s ease;
-    flex: none;
+    margin-bottom: 32px;
   }
 
   h1{
@@ -78,7 +58,7 @@
     font-weight: 600;
     font-size: clamp(26px, 4.5vw, 34px);
     line-height: 1.25;
-    margin: 0 0 6px;
+    margin: 0 0 24px;
     letter-spacing: -0.01em;
   }
 
@@ -87,22 +67,16 @@
     transition: color 0.35s ease;
   }
 
-  .tagline{
-    color: var(--text-muted);
-    font-size: 15px;
-    margin: 0 0 28px;
-    max-width: 46ch;
-  }
-
   /* --- toggle switch --- */
   .switch{
     position: relative;
-    display: inline-flex;
+    display: flex;
+    width: max-content;
+    max-width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 999px;
     padding: 4px;
-    gap: 2px;
   }
 
   .switch .thumb{
@@ -124,6 +98,7 @@
   .switch button{
     position: relative;
     z-index: 1;
+    flex: 1 1 0;
     appearance: none;
     background: transparent;
     border: none;
@@ -131,11 +106,12 @@
     font-family: "IBM Plex Mono", monospace;
     font-size: 13.5px;
     font-weight: 500;
-    padding: 9px 18px;
+    padding: 9px 20px;
     border-radius: 999px;
     cursor: pointer;
     transition: color 0.25s ease;
     white-space: nowrap;
+    text-align: center;
   }
 
   .switch button[aria-pressed="true"]{
@@ -284,16 +260,6 @@
     50%{ opacity: 1; }
   }
 
-  footer{
-    margin-top: 48px;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 12px;
-    color: var(--text-faint);
-  }
-
-  footer a{ color: var(--text-faint); text-decoration: underline; text-underline-offset: 3px; }
-  footer a:hover{ color: var(--text-muted); }
-
   @media (prefers-reduced-motion: reduce){
     *{ animation: none !important; transition: none !important; }
   }
@@ -302,9 +268,7 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="mark"><span class="dot" aria-hidden="true"></span>repohub</div>
       <h1>Repositories of <span class="owner" id="ownerName">LJ-Web-Management</span></h1>
-      <p class="tagline" id="tagline">Every public repository, pulled live from GitHub.</p>
 
       <div class="switch" id="switch" data-active="lj" role="group" aria-label="Choose account">
         <span class="thumb" aria-hidden="true"></span>
@@ -324,10 +288,6 @@
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
     </div>
-
-    <footer>
-      built with the GitHub REST API · data refreshes on load
-    </footer>
   </div>
 
 <script>
@@ -335,19 +295,16 @@
     lj: {
       login: "LJ-Web-Management",
       label: "LJ-Web-Management",
-      tagline: "Every public repository, pulled live from GitHub.",
     },
     hp: {
       login: "HP6673",
       label: "HP6673",
-      tagline: "Every public repository, pulled live from GitHub.",
     }
   };
 
   const el = {
     switchEl: document.getElementById("switch"),
     ownerName: document.getElementById("ownerName"),
-    tagline: document.getElementById("tagline"),
     content: document.getElementById("content"),
     countLine: document.getElementById("countLine"),
     profileLink: document.getElementById("profileLink"),
@@ -445,7 +402,6 @@
     });
 
     el.ownerName.textContent = account.label;
-    el.tagline.textContent = account.tagline;
     el.profileLink.href = "https://github.com/" + account.login;
     el.countLine.textContent = "loading…";
     renderSkeleton();

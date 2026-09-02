@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>repohub — LJ-Web-Management / HP6673</title>
+<meta name="description" content="A live directory of repositories from LJ-Web-Management and HP6673.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #15161b;
+    --surface: #1c1e25;
+    --surface-hover: #23252e;
+    --border: #2b2d36;
+    --text: #eaeaec;
+    --text-muted: #8b8d98;
+    --text-faint: #5c5e69;
+    --accent-lj: #ffb454;
+    --accent-lj-dim: #443626;
+    --accent-hp: #7c9bff;
+    --accent-hp-dim: #262c44;
+    --accent: var(--accent-lj);
+    --accent-dim: var(--accent-lj-dim);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ color-scheme: dark; }
+
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a{ color: inherit; }
+
+  .wrap{
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+
+  @media (max-width: 560px){
+    .wrap{ padding: 40px 18px 72px; }
+  }
+
+  header{
+    margin-bottom: 40px;
+  }
+
+  .mark{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    color: var(--text-faint);
+    letter-spacing: 0.02em;
+    margin-bottom: 28px;
+  }
+
+  .mark .dot{
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    transition: background 0.35s ease;
+    flex: none;
+  }
+
+  h1{
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: clamp(26px, 4.5vw, 34px);
+    line-height: 1.25;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+
+  h1 .owner{
+    color: var(--accent);
+    transition: color 0.35s ease;
+  }
+
+  .tagline{
+    color: var(--text-muted);
+    font-size: 15px;
+    margin: 0 0 28px;
+    max-width: 46ch;
+  }
+
+  /* --- toggle switch --- */
+  .switch{
+    position: relative;
+    display: inline-flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 2px;
+  }
+
+  .switch .thumb{
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    height: calc(100% - 8px);
+    width: calc(50% - 4px);
+    border-radius: 999px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    transition: transform 0.35s cubic-bezier(.65,0,.35,1), background 0.35s ease, border-color 0.35s ease;
+  }
+
+  .switch[data-active="hp"] .thumb{
+    transform: translateX(100%);
+  }
+
+  .switch button{
+    position: relative;
+    z-index: 1;
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.25s ease;
+    white-space: nowrap;
+  }
+
+  .switch button[aria-pressed="true"]{
+    color: var(--text);
+  }
+
+  .switch button:focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* --- status line --- */
+  .status{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    color: var(--text-faint);
+    margin: 32px 0 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .status a{
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .status a:hover{ color: var(--text); }
+
+  /* --- repo list --- */
+  ul.repos{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul.repos li{
+    border-bottom: 1px solid var(--border);
+  }
+
+  ul.repos li a{
+    display: block;
+    text-decoration: none;
+    padding: 18px 4px;
+    transition: background 0.15s ease;
+  }
+
+  ul.repos li a:hover,
+  ul.repos li a:focus-visible{
+    background: var(--surface-hover);
+    margin: 0 -14px;
+    padding: 18px 18px;
+    border-radius: 8px;
+  }
+
+  .repo-top{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .repo-name{
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: 15.5px;
+    color: var(--text);
+  }
+
+  .repo-name .fork-tag{
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 400;
+    color: var(--text-faint);
+    font-size: 12px;
+    margin-left: 8px;
+  }
+
+  .repo-meta{
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 12px;
+    color: var(--text-faint);
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  .lang{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lang .swatch{
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-faint);
+  }
+
+  .repo-desc{
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    line-height: 1.5;
+    max-width: 62ch;
+  }
+
+  .empty-desc{
+    color: var(--text-faint);
+    font-style: italic;
+  }
+
+  /* --- states --- */
+  .state{
+    padding: 40px 4px;
+    color: var(--text-muted);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13.5px;
+  }
+
+  .state.error{ color: var(--accent); }
+
+  .skeleton-row{
+    height: 62px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skeleton-row::after{
+    content: "";
+    position: absolute;
+    top: 18px;
+    left: 4px;
+    height: 14px;
+    width: 40%;
+    background: var(--surface);
+    border-radius: 4px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse{
+    0%, 100%{ opacity: 0.5; }
+    50%{ opacity: 1; }
+  }
+
+  footer{
+    margin-top: 48px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  footer a{ color: var(--text-faint); text-decoration: underline; text-underline-offset: 3px; }
+  footer a:hover{ color: var(--text-muted); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="mark"><span class="dot" aria-hidden="true"></span>repohub</div>
+      <h1>Repositories of <span class="owner" id="ownerName">LJ-Web-Management</span></h1>
+      <p class="tagline" id="tagline">Every public repository, pulled live from GitHub.</p>
+
+      <div class="switch" id="switch" data-active="lj" role="group" aria-label="Choose account">
+        <span class="thumb" aria-hidden="true"></span>
+        <button type="button" data-account="lj" aria-pressed="true">LJ-Web-Management</button>
+        <button type="button" data-account="hp" aria-pressed="false">HP6673</button>
+      </div>
+    </header>
+
+    <div class="status">
+      <span id="countLine">loading…</span>
+      <a id="profileLink" href="https://github.com/LJ-Web-Management" target="_blank" rel="noopener">view profile ↗</a>
+    </div>
+
+    <div id="content" aria-live="polite">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+
+    <footer>
+      built with the GitHub REST API · data refreshes on load
+    </footer>
+  </div>
+
+<script>
+  const ACCOUNTS = {
+    lj: {
+      login: "LJ-Web-Management",
+      label: "LJ-Web-Management",
+      tagline: "Every public repository, pulled live from GitHub.",
+    },
+    hp: {
+      login: "HP6673",
+      label: "HP6673",
+      tagline: "Every public repository, pulled live from GitHub.",
+    }
+  };
+
+  const el = {
+    switchEl: document.getElementById("switch"),
+    ownerName: document.getElementById("ownerName"),
+    tagline: document.getElementById("tagline"),
+    content: document.getElementById("content"),
+    countLine: document.getElementById("countLine"),
+    profileLink: document.getElementById("profileLink"),
+  };
+
+  const cache = {};
+  let currentReq = 0;
+
+  function langColor(lang){
+    const map = {
+      JavaScript: "#f1e05a",
+      TypeScript: "#3178c6",
+      HTML: "#e34c26",
+      CSS: "#563d7c",
+      Python: "#3572A5",
+      Shell: "#89e051",
+      Java: "#b07219",
+    };
+    return map[lang] || "#8b8d98";
+  }
+
+  function timeAgo(iso){
+    const diff = Date.now() - new Date(iso).getTime();
+    const day = 86400000;
+    const days = Math.floor(diff / day);
+    if (days < 1) return "today";
+    if (days === 1) return "1 day ago";
+    if (days < 30) return days + " days ago";
+    const months = Math.floor(days / 30);
+    if (months < 12) return months + (months === 1 ? " month ago" : " months ago");
+    const years = Math.floor(months / 12);
+    return years + (years === 1 ? " year ago" : " years ago");
+  }
+
+  function renderSkeleton(){
+    el.content.innerHTML = Array(4).fill('<div class="skeleton-row"></div>').join("");
+  }
+
+  function renderError(login, message){
+    el.content.innerHTML =
+      '<div class="state error">could not load repositories for ' + login + '<br>' + message + '</div>';
+  }
+
+  function renderRepos(repos){
+    if (repos.length === 0){
+      el.content.innerHTML = '<div class="state">no public repositories found.</div>';
+      return;
+    }
+
+    repos.sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
+
+    const items = repos.map(r => {
+      const desc = r.description
+        ? escapeHtml(r.description)
+        : '<span class="empty-desc">no description</span>';
+      const lang = r.language
+        ? '<span class="lang"><span class="swatch" style="background:' + langColor(r.language) + '"></span>' + escapeHtml(r.language) + '</span>'
+        : '';
+      const forkTag = r.fork ? '<span class="fork-tag">forked</span>' : '';
+      const stars = r.stargazers_count > 0 ? '★ ' + r.stargazers_count : '';
+
+      return (
+        '<li><a href="' + r.html_url + '" target="_blank" rel="noopener">' +
+          '<div class="repo-top">' +
+            '<span class="repo-name">' + escapeHtml(r.name) + forkTag + '</span>' +
+            '<span class="repo-meta">' + (stars ? '<span>' + stars + '</span>' : '') + lang + '<span>' + timeAgo(r.pushed_at) + '</span></span>' +
+          '</div>' +
+          '<p class="repo-desc">' + desc + '</p>' +
+        '</a></li>'
+      );
+    }).join("");
+
+    el.content.innerHTML = '<ul class="repos">' + items + '</ul>';
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function loadAccount(key){
+    const reqId = ++currentReq;
+    const account = ACCOUNTS[key];
+
+    el.switchEl.dataset.active = key;
+    document.documentElement.style.setProperty(
+      "--accent", key === "lj" ? "var(--accent-lj)" : "var(--accent-hp)"
+    );
+    document.documentElement.style.setProperty(
+      "--accent-dim", key === "lj" ? "var(--accent-lj-dim)" : "var(--accent-hp-dim)"
+    );
+    el.switchEl.querySelectorAll("button").forEach(b => {
+      b.setAttribute("aria-pressed", b.dataset.account === key ? "true" : "false");
+    });
+
+    el.ownerName.textContent = account.label;
+    el.tagline.textContent = account.tagline;
+    el.profileLink.href = "https://github.com/" + account.login;
+    el.countLine.textContent = "loading…";
+    renderSkeleton();
+
+    if (cache[key]){
+      if (reqId !== currentReq) return;
+      el.countLine.textContent = cache[key].length + (cache[key].length === 1 ? " repository" : " repositories");
+      renderRepos(cache[key]);
+      return;
+    }
+
+    try{
+      const all = [];
+      let page = 1;
+      while (true){
+        const res = await fetch(
+          "https://api.github.com/users/" + account.login + "/repos?per_page=100&page=" + page + "&sort=pushed",
+          { headers: { Accept: "application/vnd.github+json" } }
+        );
+        if (!res.ok){
+          if (res.status === 403){
+            throw new Error("GitHub API rate limit reached. Try again in a few minutes.");
+          }
+          throw new Error("GitHub responded with " + res.status);
+        }
+        const batch = await res.json();
+        all.push(...batch);
+        if (batch.length < 100) break;
+        page += 1;
+      }
+
+      if (reqId !== currentReq) return;
+      cache[key] = all;
+      el.countLine.textContent = all.length + (all.length === 1 ? " repository" : " repositories");
+      renderRepos(all);
+    } catch (err){
+      if (reqId !== currentReq) return;
+      el.countLine.textContent = "error";
+      renderError(account.login, err.message);
+    }
+  }
+
+  el.switchEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-account]");
+    if (!btn) return;
+    loadAccount(btn.dataset.account);
+  });
+
+  loadAccount("lj");
+</script>
+</body>
+</html>

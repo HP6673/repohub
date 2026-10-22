@@ -1,0 +1,31 @@
+{
+  "name": "repohub",
+  "productName": "RepoHub",
+  "version": "1.0.0",
+  "description": "Desktop app for the LJ-Web-Management / HP6673 repository directory.",
+  "author": "LJ-Web-Management",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "copy-web": "node copy-web.js",
+    "start": "npm run copy-web && electron .",
+    "dist:win": "npm run copy-web && electron-builder --win nsis --x64 --arm64 --publish never"
+  },
+  "build": {
+    "appId": "com.ljwebmanagement.repohub",
+    "productName": "RepoHub",
+    "files": ["main.js", "web/**"],
+    "directories": { "output": "dist" },
+    "win": { "target": "nsis" },
+    "nsis": {
+      "artifactName": "RepoHub-Setup.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  }
+}

@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>repohub — LJ-Web-Management / HP6673</title>
 <meta name="description" content="A live directory of repositories from LJ-Web-Management and HP6673.">
+<meta name="color-scheme" content="dark light">
+<script>
+  // Apply the saved theme before first paint to avoid a flash.
+  (function(){
+    try{
+      const saved = localStorage.getItem("repohub-theme");
+      if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+    } catch (e){}
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -16,18 +26,54 @@
     --border: #2b2d36;
     --text: #eaeaec;
     --text-muted: #8b8d98;
-    --text-faint: #5c5e69;
+    --text-faint: #6a6c77;
     --accent-lj: #ffb454;
     --accent-lj-dim: #443626;
     --accent-hp: #7c9bff;
     --accent-hp-dim: #262c44;
     --accent: var(--accent-lj);
     --accent-dim: var(--accent-lj-dim);
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"]{
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface-hover: #efefec;
+    --border: #e1e1dc;
+    --text: #1b1c20;
+    --text-muted: #55575f;
+    --text-faint: #7d7f88;
+    --accent-lj: #a85f00;
+    --accent-lj-dim: #fbecd6;
+    --accent-hp: #3150c9;
+    --accent-hp-dim: #e1e7fb;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --surface-hover: #efefec;
+      --border: #e1e1dc;
+      --text: #1b1c20;
+      --text-muted: #55575f;
+      --text-faint: #7d7f88;
+      --accent-lj: #a85f00;
+      --accent-lj-dim: #fbecd6;
+      --accent-hp: #3150c9;
+      --accent-hp-dim: #e1e7fb;
+      color-scheme: light;
+    }
+  }
+
+  :root[data-account="hp"]{
+    --accent: var(--accent-hp);
+    --accent-dim: var(--accent-hp-dim);
   }
 
   *{ box-sizing: border-box; }
-
-  html{ color-scheme: dark; }
 
   body{
     margin: 0;
@@ -35,6 +81,7 @@
     color: var(--text);
     font-family: "IBM Plex Sans", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    transition: background 0.25s ease, color 0.25s ease;
   }
 
   a{ color: inherit; }
@@ -46,20 +93,28 @@
   }
 
   @media (max-width: 560px){
-    .wrap{ padding: 40px 18px 72px; }
+    .wrap{ padding: 40px 16px 72px; }
   }
 
   header{
-    margin-bottom: 32px;
+    margin-bottom: 28px;
+  }
+
+  .header-top{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
   }
 
   h1{
     font-family: "IBM Plex Mono", monospace;
     font-weight: 600;
-    font-size: clamp(26px, 4.5vw, 34px);
+    font-size: clamp(22px, 4.5vw, 34px);
     line-height: 1.25;
     margin: 0 0 24px;
     letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
   }
 
   h1 .owner{
@@ -67,10 +122,41 @@
     transition: color 0.35s ease;
   }
 
-  /* --- toggle switch --- */
+  /* --- theme toggle --- */
+  .theme-toggle{
+    flex: none;
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin-top: 2px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .theme-toggle:hover{ color: var(--text); border-color: var(--text-faint); }
+
+  .theme-toggle:focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .theme-toggle svg{ width: 18px; height: 18px; }
+  .theme-toggle .icon-sun{ display: none; }
+  :root[data-resolved-theme="dark"] .theme-toggle .icon-sun{ display: block; }
+  :root[data-resolved-theme="dark"] .theme-toggle .icon-moon{ display: none; }
+
+  /* --- account switch --- */
   .switch{
     position: relative;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     width: max-content;
     max-width: 100%;
     background: var(--surface);
@@ -98,7 +184,7 @@
   .switch button{
     position: relative;
     z-index: 1;
-    flex: 1 1 0;
+    min-width: 0;
     appearance: none;
     background: transparent;
     border: none;
@@ -111,7 +197,13 @@
     cursor: pointer;
     transition: color 0.25s ease;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     text-align: center;
+  }
+
+  @media (max-width: 400px){
+    .switch button{ padding: 9px 12px; font-size: 12.5px; }
   }
 
   .switch button[aria-pressed="true"]{
@@ -123,78 +215,218 @@
     outline-offset: 2px;
   }
 
+  /* --- search & filters --- */
+  .controls{
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    gap: 8px;
+    margin-top: 28px;
+  }
+
+  @media (max-width: 640px){
+    .controls{ grid-template-columns: 1fr 1fr 1fr; }
+    .controls .search{ grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 480px){
+    .controls{ grid-template-columns: 1fr 1fr; }
+    .controls #sortSelect{ grid-column: 1 / -1; }
+  }
+
+  .search{
+    position: relative;
+  }
+
+  .search svg{
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    width: 15px;
+    height: 15px;
+    transform: translateY(-50%);
+    color: var(--text-faint);
+    pointer-events: none;
+  }
+
+  .search kbd{
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    pointer-events: none;
+  }
+
+  .search input:focus ~ kbd,
+  .search input:not(:placeholder-shown) ~ kbd{ display: none; }
+
+  .controls input,
+  .controls select{
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0 12px;
+    transition: border-color 0.2s ease;
+  }
+
+  .controls input{ padding-left: 34px; padding-right: 34px; }
+
+  .controls input::placeholder{ color: var(--text-faint); }
+
+  .controls input::-webkit-search-cancel-button{ cursor: pointer; }
+
+  .controls select{
+    cursor: pointer;
+    appearance: none;
+    padding-right: 30px;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--text-faint) 50%),
+      linear-gradient(135deg, var(--text-faint) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 16px, calc(100% - 11px) 16px;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+  }
+
+  .controls input:hover,
+  .controls select:hover{ border-color: var(--text-faint); }
+
+  .controls input:focus,
+  .controls select:focus{
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .visually-hidden{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   /* --- status line --- */
   .status{
     display: flex;
     align-items: baseline;
     justify-content: space-between;
+    gap: 16px;
     font-family: "IBM Plex Mono", monospace;
     font-size: 12.5px;
     color: var(--text-faint);
-    margin: 32px 0 10px;
+    margin: 24px 0 10px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border);
   }
 
   .status a{
+    flex: none;
     color: var(--text-muted);
     text-decoration: none;
   }
   .status a:hover{ color: var(--text); }
 
+  .link-btn{
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 8px;
+    font: inherit;
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
   /* --- repo list --- */
   ul.repos{
     list-style: none;
-    margin: 0;
+    margin: 0 -14px;
     padding: 0;
   }
 
   ul.repos li{
-    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  ul.repos li + li::before{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 14px;
+    right: 14px;
+    border-top: 1px solid var(--border);
   }
 
   ul.repos li a{
     display: block;
     text-decoration: none;
-    padding: 18px 4px;
+    padding: 18px;
+    border-radius: 8px;
     transition: background 0.15s ease;
   }
 
   ul.repos li a:hover,
   ul.repos li a:focus-visible{
     background: var(--surface-hover);
-    margin: 0 -14px;
-    padding: 18px 18px;
-    border-radius: 8px;
+  }
+
+  ul.repos li a:focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
 
   .repo-top{
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: 16px;
+    gap: 6px 16px;
   }
 
   .repo-name{
+    min-width: 0;
     font-family: "IBM Plex Mono", monospace;
     font-weight: 600;
     font-size: 15.5px;
     color: var(--text);
+    overflow-wrap: anywhere;
   }
 
-  .repo-name .fork-tag{
+  .tag{
+    display: inline-block;
     font-family: "IBM Plex Sans", sans-serif;
     font-weight: 400;
     color: var(--text-faint);
-    font-size: 12px;
+    font-size: 11.5px;
+    line-height: 1;
     margin-left: 8px;
+    padding: 3px 7px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    vertical-align: 2px;
   }
 
   .repo-meta{
-    flex: none;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 14px;
+    gap: 4px 14px;
     font-size: 12px;
     color: var(--text-faint);
     font-family: "IBM Plex Mono", monospace;
@@ -219,11 +451,18 @@
     font-size: 13.5px;
     line-height: 1.5;
     max-width: 62ch;
+    overflow-wrap: anywhere;
   }
 
   .empty-desc{
     color: var(--text-faint);
     font-style: italic;
+  }
+
+  mark{
+    background: var(--accent-dim);
+    color: inherit;
+    border-radius: 2px;
   }
 
   /* --- states --- */
@@ -232,6 +471,7 @@
     color: var(--text-muted);
     font-family: "IBM Plex Mono", monospace;
     font-size: 13.5px;
+    line-height: 1.6;
   }
 
   .state.error{ color: var(--accent); }
@@ -250,7 +490,7 @@
     left: 4px;
     height: 14px;
     width: 40%;
-    background: var(--surface);
+    background: var(--surface-hover);
     border-radius: 4px;
     animation: pulse 1.4s ease-in-out infinite;
   }
@@ -268,12 +508,47 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>Repositories of <span class="owner" id="ownerName">LJ-Web-Management</span></h1>
+      <div class="header-top">
+        <h1>Repositories of <span class="owner" id="ownerName">LJ-Web-Management</span></h1>
+        <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        </button>
+      </div>
 
       <div class="switch" id="switch" data-active="lj" role="group" aria-label="Choose account">
         <span class="thumb" aria-hidden="true"></span>
         <button type="button" data-account="lj" aria-pressed="true">LJ-Web-Management</button>
         <button type="button" data-account="hp" aria-pressed="false">HP6673</button>
+      </div>
+
+      <div class="controls" role="search">
+        <div class="search">
+          <label for="searchInput" class="visually-hidden">Search repositories</label>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="search" id="searchInput" placeholder="Search name, description, topic…" autocomplete="off" spellcheck="false">
+          <kbd aria-hidden="true">/</kbd>
+        </div>
+
+        <label for="typeFilter" class="visually-hidden">Type</label>
+        <select id="typeFilter">
+          <option value="all">All types</option>
+          <option value="sources">Sources</option>
+          <option value="forks">Forks</option>
+          <option value="archived">Archived</option>
+        </select>
+
+        <label for="langFilter" class="visually-hidden">Language</label>
+        <select id="langFilter">
+          <option value="">All languages</option>
+        </select>
+
+        <label for="sortSelect" class="visually-hidden">Sort</label>
+        <select id="sortSelect">
+          <option value="pushed">Last updated</option>
+          <option value="name">Name</option>
+          <option value="stars">Stars</option>
+        </select>
       </div>
     </header>
 
@@ -302,26 +577,78 @@
     }
   };
 
+  const THEME_KEY = "repohub-theme";
+
   const el = {
     switchEl: document.getElementById("switch"),
     ownerName: document.getElementById("ownerName"),
     content: document.getElementById("content"),
     countLine: document.getElementById("countLine"),
     profileLink: document.getElementById("profileLink"),
+    themeToggle: document.getElementById("themeToggle"),
+    search: document.getElementById("searchInput"),
+    typeFilter: document.getElementById("typeFilter"),
+    langFilter: document.getElementById("langFilter"),
+    sort: document.getElementById("sortSelect"),
   };
 
   const cache = {};
   let currentReq = 0;
+  let currentKey = "lj";
 
+  /* --- theme --- */
+  const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
+
+  function resolvedTheme(){
+    const explicit = document.documentElement.dataset.theme;
+    if (explicit === "light" || explicit === "dark") return explicit;
+    return systemDark.matches ? "dark" : "light";
+  }
+
+  function syncThemeUI(){
+    const theme = resolvedTheme();
+    document.documentElement.dataset.resolvedTheme = theme;
+    const next = theme === "dark" ? "light" : "dark";
+    el.themeToggle.setAttribute("aria-label", "Switch to " + next + " mode");
+    el.themeToggle.title = "Switch to " + next + " mode";
+  }
+
+  el.themeToggle.addEventListener("click", () => {
+    const next = resolvedTheme() === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try{ localStorage.setItem(THEME_KEY, next); } catch (e){}
+    syncThemeUI();
+  });
+
+  systemDark.addEventListener("change", syncThemeUI);
+  syncThemeUI();
+
+  /* --- helpers --- */
   function langColor(lang){
     const map = {
       JavaScript: "#f1e05a",
       TypeScript: "#3178c6",
       HTML: "#e34c26",
       CSS: "#563d7c",
+      SCSS: "#c6538c",
       Python: "#3572A5",
       Shell: "#89e051",
       Java: "#b07219",
+      PHP: "#4F5D95",
+      Ruby: "#701516",
+      Go: "#00ADD8",
+      Rust: "#dea584",
+      "C#": "#178600",
+      "C++": "#f34b7d",
+      C: "#555555",
+      Vue: "#41b883",
+      Svelte: "#ff3e00",
+      Dart: "#00B4AB",
+      Kotlin: "#A97BFF",
+      Swift: "#F05138",
+      "Jupyter Notebook": "#DA5B0B",
+      PowerShell: "#012456",
+      Dockerfile: "#384d54",
     };
     return map[lang] || "#8b8d98";
   }
@@ -335,42 +662,135 @@
     if (days < 30) return days + " days ago";
     const months = Math.floor(days / 30);
     if (months < 12) return months + (months === 1 ? " month ago" : " months ago");
-    const years = Math.floor(months / 12);
+    const years = Math.floor(days / 365);
     return years + (years === 1 ? " year ago" : " years ago");
   }
 
+  function escapeHtml(str){
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function highlight(text, query){
+    if (!query) return escapeHtml(text);
+    const pattern = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Split the raw text so matches never land inside an HTML entity.
+    return String(text).split(new RegExp("(" + pattern + ")", "gi"))
+      .map((part, i) => i % 2 ? "<mark>" + escapeHtml(part) + "</mark>" : escapeHtml(part))
+      .join("");
+  }
+
+  function plural(n, word){
+    return n + " " + word + (n === 1 ? "" : (word.endsWith("y") ? "" : "s"));
+  }
+
+  function repoWord(n){
+    return n === 1 ? "repository" : "repositories";
+  }
+
+  /* --- rendering --- */
   function renderSkeleton(){
     el.content.innerHTML = Array(4).fill('<div class="skeleton-row"></div>').join("");
   }
 
   function renderError(login, message){
     el.content.innerHTML =
-      '<div class="state error">could not load repositories for ' + login + '<br>' + message + '</div>';
+      '<div class="state error">could not load repositories for ' + escapeHtml(login) + '<br>' + escapeHtml(message) + '</div>';
+  }
+
+  function populateLanguages(repos){
+    const counts = {};
+    repos.forEach(r => {
+      if (r.language) counts[r.language] = (counts[r.language] || 0) + 1;
+    });
+    const langs = Object.keys(counts).sort((a, b) => a.localeCompare(b));
+    const previous = el.langFilter.value;
+
+    el.langFilter.innerHTML =
+      '<option value="">All languages</option>' +
+      langs.map(l => '<option value="' + escapeHtml(l) + '">' + escapeHtml(l) + ' (' + counts[l] + ')</option>').join("");
+
+    el.langFilter.value = langs.includes(previous) ? previous : "";
+  }
+
+  function getFiltered(repos){
+    const query = el.search.value.trim().toLowerCase();
+    const type = el.typeFilter.value;
+    const lang = el.langFilter.value;
+
+    const filtered = repos.filter(r => {
+      if (type === "sources" && r.fork) return false;
+      if (type === "forks" && !r.fork) return false;
+      if (type === "archived" && !r.archived) return false;
+      if (lang && r.language !== lang) return false;
+      if (query){
+        const haystack = [r.name, r.description || "", (r.topics || []).join(" ")].join(" ").toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
+      return true;
+    });
+
+    const sort = el.sort.value;
+    filtered.sort((a, b) => {
+      if (sort === "name") return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      if (sort === "stars") return (b.stargazers_count - a.stargazers_count) || (new Date(b.pushed_at) - new Date(a.pushed_at));
+      return new Date(b.pushed_at) - new Date(a.pushed_at);
+    });
+
+    return filtered;
+  }
+
+  function hasActiveFilters(){
+    return el.search.value.trim() !== "" || el.typeFilter.value !== "all" || el.langFilter.value !== "";
   }
 
   function renderRepos(repos){
     if (repos.length === 0){
+      el.countLine.textContent = "0 repositories";
       el.content.innerHTML = '<div class="state">no public repositories found.</div>';
       return;
     }
 
-    repos.sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
+    const filtered = getFiltered(repos);
+    const query = el.search.value.trim();
 
-    const items = repos.map(r => {
+    if (hasActiveFilters()){
+      el.countLine.innerHTML =
+        escapeHtml(filtered.length + " of " + repos.length + " " + repoWord(repos.length)) +
+        '<button type="button" class="link-btn" id="clearFilters">clear filters</button>';
+    } else {
+      el.countLine.textContent = repos.length + " " + repoWord(repos.length);
+    }
+
+    if (filtered.length === 0){
+      el.content.innerHTML = '<div class="state">no repositories match your filters.</div>';
+      return;
+    }
+
+    const items = filtered.map(r => {
       const desc = r.description
-        ? escapeHtml(r.description)
+        ? highlight(r.description, query)
         : '<span class="empty-desc">no description</span>';
       const lang = r.language
         ? '<span class="lang"><span class="swatch" style="background:' + langColor(r.language) + '"></span>' + escapeHtml(r.language) + '</span>'
         : '';
-      const forkTag = r.fork ? '<span class="fork-tag">forked</span>' : '';
-      const stars = r.stargazers_count > 0 ? '★ ' + r.stargazers_count : '';
+      const tags =
+        (r.fork ? '<span class="tag">fork</span>' : '') +
+        (r.archived ? '<span class="tag">archived</span>' : '');
+      const stars = r.stargazers_count > 0
+        ? '<span title="' + plural(r.stargazers_count, "star") + '">★ ' + r.stargazers_count + '</span>'
+        : '';
+      const updated = '<span title="' + escapeHtml(new Date(r.pushed_at).toLocaleString()) + '">' + timeAgo(r.pushed_at) + '</span>';
 
       return (
-        '<li><a href="' + r.html_url + '" target="_blank" rel="noopener">' +
+        '<li><a href="' + escapeHtml(r.html_url) + '" target="_blank" rel="noopener">' +
           '<div class="repo-top">' +
-            '<span class="repo-name">' + escapeHtml(r.name) + forkTag + '</span>' +
-            '<span class="repo-meta">' + (stars ? '<span>' + stars + '</span>' : '') + lang + '<span>' + timeAgo(r.pushed_at) + '</span></span>' +
+            '<span class="repo-name">' + highlight(r.name, query) + tags + '</span>' +
+            '<span class="repo-meta">' + stars + lang + updated + '</span>' +
           '</div>' +
           '<p class="repo-desc">' + desc + '</p>' +
         '</a></li>'
@@ -380,50 +800,50 @@
     el.content.innerHTML = '<ul class="repos">' + items + '</ul>';
   }
 
-  function escapeHtml(str){
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
+  function refresh(){
+    if (cache[currentKey]) renderRepos(cache[currentKey]);
   }
 
+  /* --- data --- */
   async function loadAccount(key){
     const reqId = ++currentReq;
     const account = ACCOUNTS[key];
+    currentKey = key;
 
     el.switchEl.dataset.active = key;
-    document.documentElement.style.setProperty(
-      "--accent", key === "lj" ? "var(--accent-lj)" : "var(--accent-hp)"
-    );
-    document.documentElement.style.setProperty(
-      "--accent-dim", key === "lj" ? "var(--accent-lj-dim)" : "var(--accent-hp-dim)"
-    );
+    document.documentElement.dataset.account = key;
     el.switchEl.querySelectorAll("button").forEach(b => {
       b.setAttribute("aria-pressed", b.dataset.account === key ? "true" : "false");
     });
 
     el.ownerName.textContent = account.label;
     el.profileLink.href = "https://github.com/" + account.login;
-    el.countLine.textContent = "loading…";
-    renderSkeleton();
 
     if (cache[key]){
-      if (reqId !== currentReq) return;
-      el.countLine.textContent = cache[key].length + (cache[key].length === 1 ? " repository" : " repositories");
+      populateLanguages(cache[key]);
       renderRepos(cache[key]);
       return;
     }
+
+    el.countLine.textContent = "loading…";
+    renderSkeleton();
 
     try{
       const all = [];
       let page = 1;
       while (true){
         const res = await fetch(
-          "https://api.github.com/users/" + account.login + "/repos?per_page=100&page=" + page + "&sort=pushed",
+          "https://api.github.com/users/" + encodeURIComponent(account.login) + "/repos?per_page=100&page=" + page + "&sort=pushed",
           { headers: { Accept: "application/vnd.github+json" } }
         );
         if (!res.ok){
-          if (res.status === 403){
-            throw new Error("GitHub API rate limit reached. Try again in a few minutes.");
+          if (res.status === 429 || (res.status === 403 && res.headers.get("x-ratelimit-remaining") === "0")){
+            const reset = Number(res.headers.get("x-ratelimit-reset"));
+            const when = reset ? " Try again after " + new Date(reset * 1000).toLocaleTimeString() + "." : " Try again in a few minutes.";
+            throw new Error("GitHub API rate limit reached." + when);
+          }
+          if (res.status === 404){
+            throw new Error("account not found on GitHub.");
           }
           throw new Error("GitHub responded with " + res.status);
         }
@@ -433,9 +853,9 @@
         page += 1;
       }
 
-      if (reqId !== currentReq) return;
       cache[key] = all;
-      el.countLine.textContent = all.length + (all.length === 1 ? " repository" : " repositories");
+      if (reqId !== currentReq) return;
+      populateLanguages(all);
       renderRepos(all);
     } catch (err){
       if (reqId !== currentReq) return;
@@ -444,10 +864,38 @@
     }
   }
 
+  /* --- events --- */
   el.switchEl.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-account]");
-    if (!btn) return;
+    if (!btn || btn.dataset.account === currentKey) return;
     loadAccount(btn.dataset.account);
+  });
+
+  el.search.addEventListener("input", refresh);
+  el.typeFilter.addEventListener("change", refresh);
+  el.langFilter.addEventListener("change", refresh);
+  el.sort.addEventListener("change", refresh);
+
+  el.countLine.addEventListener("click", (e) => {
+    if (!e.target.closest("#clearFilters")) return;
+    el.search.value = "";
+    el.typeFilter.value = "all";
+    el.langFilter.value = "";
+    refresh();
+    el.search.focus();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    const tag = (e.target.tagName || "").toLowerCase();
+    const typing = tag === "input" || tag === "select" || tag === "textarea" || e.target.isContentEditable;
+    if (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey && !e.altKey){
+      e.preventDefault();
+      el.search.focus();
+      el.search.select();
+    } else if (e.key === "Escape" && e.target === el.search && el.search.value){
+      el.search.value = "";
+      refresh();
+    }
   });
 
   loadAccount("lj");

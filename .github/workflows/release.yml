@@ -1,0 +1,116 @@
+name: Build desktop apps
+
+# Builds both apps whenever their code changes (downloadable from the run's artifacts).
+# Push a tag like v1.0.0 to also publish them as a GitHub Release; the website's
+# download buttons point at the latest release's assets.
+on:
+  push:
+    tags: ["v*"]
+    branches: ["**"]
+    paths:
+      - "macos/**"
+      - "desktop/**"
+      - "index.html"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-26
+    env:
+      # Optional: set these secrets to produce a Developer ID signed, notarized build.
+      # Without them the app is ad-hoc signed (see macos/README.md).
+      MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+    defaults:
+      run:
+        working-directory: macos
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Import signing certificate
+        if: env.MACOS_CERTIFICATE_P12 != ''
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/build.keychain"
+          echo "$MACOS_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p ci "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p ci "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$MACOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -k ci "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain
+
+      - name: Build
+        run: |
+          if [ -n "$MACOS_CERTIFICATE_P12" ]; then
+            SIGNING=(CODE_SIGN_STYLE=Manual "CODE_SIGN_IDENTITY=Developer ID Application" DEVELOPMENT_TEAM="$APPLE_TEAM_ID" OTHER_CODE_SIGN_FLAGS=--timestamp)
+          else
+            SIGNING=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=)
+          fi
+          xcodebuild -project RepoHub.xcodeproj -target RepoHub -configuration Release \
+            SYMROOT="$PWD/build" "${SIGNING[@]}" build
+
+      - name: Package DMG
+        run: |
+          mkdir -p dmg
+          cp -R build/Release/RepoHub.app dmg/
+          ln -s /Applications dmg/Applications
+          hdiutil create -volname RepoHub -srcfolder dmg -ov -format UDZO RepoHub-mac.dmg
+
+      - name: Notarize
+        if: env.MACOS_CERTIFICATE_P12 != '' && env.APPLE_ID != ''
+        run: |
+          xcrun notarytool submit RepoHub-mac.dmg --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" --wait
+          xcrun stapler staple RepoHub-mac.dmg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RepoHub-mac
+          path: macos/RepoHub-mac.dmg
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+      - run: npm run dist:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RepoHub-windows
+          path: desktop/dist/RepoHub-Setup.exe
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/RepoHub-mac.dmg
+            artifacts/RepoHub-Setup.exe
+          generate_release_notes: true

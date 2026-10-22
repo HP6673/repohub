@@ -1,0 +1,6 @@
+RepoHub.xcodeproj/
+RepoHub/Info.plist
+RepoHubWidget/Info.plist
+RepoHub/RepoHub.entitlements
+RepoHubWidget/RepoHubWidget.entitlements
+build/

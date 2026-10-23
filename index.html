@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>repohub — LJ-Web-Management / HP6673</title>
+<title>RepoHub - LJ-Web-Management</title>
+<link rel="icon" id="favicon" type="image/png" href="https://avatars.githubusercontent.com/LJ-Web-Management?s=64">
 <meta name="description" content="A live directory of repositories from LJ-Web-Management and HP6673.">
 <meta name="color-scheme" content="dark light">
 <script>
@@ -196,14 +197,35 @@
     border-radius: 999px;
     cursor: pointer;
     transition: color 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: center;
   }
 
+  .switch button .label{
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .switch .avatar{
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--surface-hover);
+    box-shadow: 0 0 0 1px var(--border);
+    opacity: 0.75;
+    transition: opacity 0.25s ease;
+  }
+
+  .switch button[aria-pressed="true"] .avatar{ opacity: 1; }
+
   @media (max-width: 400px){
-    .switch button{ padding: 9px 12px; font-size: 12.5px; }
+    .switch button{ padding: 9px 12px; font-size: 12.5px; gap: 6px; }
+    .switch .avatar{ width: 16px; height: 16px; }
   }
 
   .switch button[aria-pressed="true"]{
@@ -590,8 +612,8 @@
 
       <div class="switch" id="switch" data-active="lj" role="group" aria-label="Choose account">
         <span class="thumb" aria-hidden="true"></span>
-        <button type="button" data-account="lj" aria-pressed="true">LJ-Web-Management</button>
-        <button type="button" data-account="hp" aria-pressed="false">HP6673</button>
+        <button type="button" data-account="lj" aria-pressed="true"><img class="avatar" src="https://avatars.githubusercontent.com/LJ-Web-Management?s=48" alt="" width="18" height="18"><span class="label">LJ-Web-Management</span></button>
+        <button type="button" data-account="hp" aria-pressed="false"><img class="avatar" src="https://avatars.githubusercontent.com/HP6673?s=48" alt="" width="18" height="18"><span class="label">HP6673</span></button>
       </div>
 
       <div class="controls" role="search">
@@ -674,6 +696,7 @@
     content: document.getElementById("content"),
     countLine: document.getElementById("countLine"),
     profileLink: document.getElementById("profileLink"),
+    favicon: document.getElementById("favicon"),
     themeToggle: document.getElementById("themeToggle"),
     search: document.getElementById("searchInput"),
     typeFilter: document.getElementById("typeFilter"),
@@ -906,6 +929,8 @@
     });
 
     el.ownerName.textContent = account.label;
+    document.title = "RepoHub - " + account.label;
+    el.favicon.href = "https://avatars.githubusercontent.com/" + encodeURIComponent(account.login) + "?s=64";
     el.profileLink.href = "https://github.com/" + account.login;
 
     if (cache[key]){
